@@ -20,20 +20,26 @@ transmission = st.selectbox("Transmission", ["Manual", "Automatic", "Semi-Auto"]
 fuelType = st.selectbox("Fuel Type", ["Petrol", "Diesel", "Electric", "Hybrid", "Other"])
 
 if st.button("Predict Price"):
-    # 1. DataFrame banav
+    # 1. Input
     input_data = pd.DataFrame([{
         'model': model_name, 'year': year, 'mileage': mileage, 'tax': tax,
         'mpg': mpg, 'engineSize': engineSize, 'transmission': transmission, 'fuelType': fuelType
     }])
 
-    # 2. One-Hot Encoding kar - training sarkhach
+    # 2. One-Hot
     input_encoded = pd.get_dummies(input_data, columns=['model', 'transmission', 'fuelType'])
 
-    # 3. Training che sagle columns add kar. Nasel tar 0 thev
-    input_encoded = input_encoded.reindex(columns=model_columns, fill_value=0)
+    # 3. Missing columns add kar
+    for col in model_columns:
+        if col not in input_encoded.columns:
+            input_encoded[col] = 0
 
-    # 4. Scale kar aani predict kar
+    # 4. Order set + float
+    input_encoded = input_encoded[model_columns]
+    input_encoded = input_encoded.astype(float)
+
+    # 5. Predict
     input_scaled = scaler.transform(input_encoded)
     prediction = model.predict(input_scaled)
 
-    st.success(f"Predicted Price: £ {prediction[0]:.2f}")
+    st.success(f"Predicted Price: £ {max(0, prediction[0]):,.2f}")
